@@ -24,7 +24,9 @@ function App() {
 
   const fetchTasks = async () => {
     try {
-      const response = await axios.get("http://localhost:12676/fetchAllTasks");
+      const response = await axios.get(
+        "https://todoappbackend-production-5840.up.railway.app/fetchAllTasks"
+      );
       setTasks(response.data);
     } catch (error) {
       console.error("Error fetching tasks", error);
@@ -34,7 +36,10 @@ function App() {
   const addTask = async () => {
     if (title) {
       try {
-        await axios.post("http://localhost:12676/add", { title });
+        await axios.post(
+          "https://todoappbackend-production-5840.up.railway.app/add",
+          { title }
+        );
         fetchTasks(); // Refresh tasks
         setTitle(""); // Clear input
       } catch (error) {
@@ -44,7 +49,9 @@ function App() {
   };
 
   const setupWebSocket = () => {
-    const ws = new WebSocket("ws://localhost:12676");
+    const ws = new WebSocket(
+      "wss://todoappbackend-production-5840.up.railway.app"
+    );
 
     ws.onopen = () => {
       console.log("WebSocket connection established");
