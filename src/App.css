@@ -1,0 +1,10 @@
+.task-list {
+  position: relative;
+}
+
+.task-list::-webkit-scrollbar {
+  display: none; /* Hide the scrollbar */
+}
+
+
+

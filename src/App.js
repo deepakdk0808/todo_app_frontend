@@ -2,19 +2,23 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Box,
-  Button,
   Input,
   Heading,
   List,
   ListItem,
   Text,
   Container,
+  IconButton,
+  Flex,
 } from "@chakra-ui/react";
+import { AddIcon } from "@chakra-ui/icons";
+import "./App.css"; // Import the CSS file
 
 function App() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
+  const [source, setSource] = useState("");
 
   useEffect(() => {
     fetchTasks();
@@ -24,10 +28,9 @@ function App() {
 
   const fetchTasks = async () => {
     try {
-      const response = await axios.get(
-        "https://todoappbackend-production-5840.up.railway.app/fetchAllTasks"
-      );
-      setTasks(response.data);
+      const response = await axios.get("http://localhost:12676/fetchAllTasks");
+      setTasks(response.data.tasks);
+      setSource(response.data.source);
     } catch (error) {
       console.error("Error fetching tasks", error);
     }
@@ -36,12 +39,9 @@ function App() {
   const addTask = async () => {
     if (title) {
       try {
-        await axios.post(
-          "https://todoappbackend-production-5840.up.railway.app/add",
-          { title }
-        );
-        fetchTasks(); // Refresh tasks
-        setTitle(""); // Clear input
+        await axios.post("http://localhost:12676/add", { title });
+        fetchTasks();
+        setTitle("");
       } catch (error) {
         console.error("Error adding task", error);
       }
@@ -49,9 +49,7 @@ function App() {
   };
 
   const setupWebSocket = () => {
-    const ws = new WebSocket(
-      "wss://todoappbackend-production-5840.up.railway.app"
-    );
+    const ws = new WebSocket("ws://localhost:12676");
 
     ws.onopen = () => {
       console.log("WebSocket connection established");
@@ -60,7 +58,7 @@ function App() {
     ws.onmessage = (event) => {
       const newTask = JSON.parse(event.data);
       setMessage(`New task added: ${newTask.title}`);
-      fetchTasks(); // Refresh tasks
+      fetchTasks();
     };
 
     ws.onclose = () => {
@@ -73,41 +71,54 @@ function App() {
   };
 
   return (
-    <Container maxW="md" marginTop="10%" centerContent>
+    <Container maxW="md" marginTop="5%" centerContent>
       <Box
-        w={{ base: "100%", md: "50%", lg: "30%" }} // Adjust width based on screen size
+        w={{ base: "100%", md: "50%", lg: "30%" }}
         p={4}
-        boxShadow="md"
+        boxShadow="lg"
         borderRadius="md"
-        bg="white"
+        bg="lightyellow"
         border="1px solid"
-        borderColor="gray.200"
-        mt={8}
+        borderColor="gray.300"
       >
-        <Heading mb={4} marginLeft="10px">
+        <Heading mb={4} textAlign="center" mt={0}>
           Note App
         </Heading>
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Add a new task"
-          mb={4}
-          ml="10px"
-        />
-        <Button colorScheme="blue" onClick={addTask} ml="20px">
-          Add Task
-        </Button>
-        <Box mt={4} maxH="200px" overflowY="auto">
-          <List>
+        <Flex mb={4} align="center">
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Add a new task"
+            flex="1"
+            mr={2}
+          />
+          <IconButton
+            icon={<AddIcon />}
+            bg="green"
+            onClick={addTask}
+            aria-label="Add Task"
+          />
+        </Flex>
+        <Box className="task-list" mt={4} maxH="200px" overflowY="auto">
+          <List spacing={3}>
             {tasks.map((task, index) => (
-              <ListItem key={index} borderBottom="1px solid #eee" p={2}>
+              <ListItem
+                key={index}
+                boxShadow="sm"
+                p={2}
+                whiteSpace="nowrap"
+                overflow="hidden"
+                textOverflow="ellipsis"
+              >
                 {task.title}
               </ListItem>
             ))}
           </List>
+          
         </Box>
-        <Text mt={4}>Showing notes out of {tasks.length}</Text>
-        {message && <Text mt={4}>Message from MQTT: {message}</Text>}
+        <Text mt={2}>Showing notes from {source}</Text>
+        <Text mt={2}>Total notes: {tasks.length}</Text>
+        {message && <Text mt={2}>Message from MQTT: {message}</Text>}
       </Box>
     </Container>
   );
